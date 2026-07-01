@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二手货品置换平台 - 工作台</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-left">
+                <h1 class="app-title">二手货品置换平台</h1>
+                <span class="app-subtitle">工作台</span>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-primary" id="publishBtn">
+                    <span class="btn-icon">+</span>
+                    发布货品
+                </button>
+            </div>
+        </header>
+
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-total">📦</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">总货品数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-active">✅</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="statActive">0</div>
+                        <div class="stat-label">上架中</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-offline">⬇️</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="statOffline">0</div>
+                        <div class="stat-label">已下架</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-traded">🔄</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="statTraded">0</div>
+                        <div class="stat-label">已置换</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-views">👁️</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="statViews">0</div>
+                        <div class="stat-label">总浏览</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-favorites">⭐</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="statFavorites">0</div>
+                        <div class="stat-label">总收藏</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-intents">💬</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="statIntents">0</div>
+                        <div class="stat-label">总置换意向</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="main-content">
+            <aside class="list-section">
+                <div class="section-header">
+                    <h2 class="section-title">货品列表</h2>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="搜索标题、描述、发布者...">
+                            <button class="btn-search" id="searchBtn">🔍</button>
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <select id="categoryFilter">
+                            <option value="">全品类</option>
+                        </select>
+                        <select id="cityFilter">
+                            <option value="">全部城市</option>
+                        </select>
+                        <select id="statusFilter">
+                            <option value="">全部状态</option>
+                        </select>
+                        <button class="btn btn-outline" id="resetFilterBtn">重置</button>
+                    </div>
+                </div>
+
+                <div class="item-list" id="itemList">
+                </div>
+            </aside>
+
+            <main class="detail-section">
+                <div class="detail-content" id="detailContent">
+                    <div class="empty-state">
+                        <div class="empty-icon">👆</div>
+                        <div class="empty-text">请从左侧列表选择一件货品查看详情</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="formModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">发布货品</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="itemForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="formTitle">标题 *</label>
+                            <input type="text" id="formTitle" required placeholder="请输入货品标题">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="formCategory">品类 *</label>
+                            <select id="formCategory" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="formCity">城市 *</label>
+                            <select id="formCity" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="formCondition">成色 *</label>
+                            <select id="formCondition" required></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="formPublisher">发布者 *</label>
+                            <input type="text" id="formPublisher" required placeholder="请输入发布者昵称">
+                        </div>
+                        <div class="form-group">
+                            <label for="formDesiredCategory">期望置换品类 *</label>
+                            <select id="formDesiredCategory" required></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="formDescription">详细描述</label>
+                            <textarea id="formDescription" rows="4" placeholder="请详细描述货品情况和置换要求..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" id="cancelBtn">取消</button>
+                        <button type="submit" class="btn btn-primary">提交</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
