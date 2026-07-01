@@ -17,23 +17,20 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => document.querySelectorAll(selector);
 
 async function request(url, options = {}) {
-    try {
-        const response = await fetch(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            ...options
-        });
-        const data = await response.json();
-        if (data.code >= 400) {
-            throw new Error(data.message);
-        }
-        return data.data;
-    } catch (error) {
-        showToast(error.message, 'error');
+    const response = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        },
+        ...options
+    });
+    const data = await response.json();
+    if (data.code >= 400) {
+        const error = new Error(data.message);
+        error.code = data.code;
         throw error;
     }
+    return data.data;
 }
 
 function showToast(message, type = 'info') {
@@ -286,13 +283,17 @@ function renderItemDetail() {
 }
 
 async function handleToggleFavorite(id) {
-    const updated = await request(`${API_BASE}/items/${id}/favorite`, { method: 'POST' });
-    state.currentItem = updated;
-    updateItemInList(updated);
-    renderItemDetail();
-    renderItemList();
-    await loadStatistics();
-    showToast(updated.isFavorited ? '已收藏' : '已取消收藏', 'success');
+    try {
+        const updated = await request(`${API_BASE}/items/${id}/favorite`, { method: 'POST' });
+        state.currentItem = updated;
+        updateItemInList(updated);
+        renderItemDetail();
+        renderItemList();
+        await loadStatistics();
+        showToast(updated.isFavorited ? '已收藏' : '已取消收藏', 'success');
+    } catch (error) {
+        showToast(`收藏操作失败：${error.message}`, 'error');
+    }
 }
 
 async function handleAddTradeIntent(id) {
@@ -303,42 +304,56 @@ async function handleAddTradeIntent(id) {
         renderItemDetail();
         renderItemList();
         await loadStatistics();
-        showToast('置换意向已发出', 'success');
+        showToast('置换意向已发出，请耐心等待发布者回复', 'success');
     } catch (error) {
         if (error.message.includes('已下架')) {
-            showToast('已下架的货品不能发起置换意向', 'warning');
+            showToast('⚠️ 该货品已下架，无法发起置换意向', 'warning');
+        } else {
+            showToast(`发起失败：${error.message}`, 'error');
         }
     }
 }
 
 async function handleMarkCommunicated(id) {
-    const updated = await request(`${API_BASE}/items/${id}/mark-communicated`, { method: 'POST' });
-    state.currentItem = updated;
-    updateItemInList(updated);
-    renderItemDetail();
-    renderItemList();
-    showToast('已标记为已沟通', 'success');
+    try {
+        const updated = await request(`${API_BASE}/items/${id}/mark-communicated`, { method: 'POST' });
+        state.currentItem = updated;
+        updateItemInList(updated);
+        renderItemDetail();
+        renderItemList();
+        showToast('已标记为已沟通', 'success');
+    } catch (error) {
+        showToast(`标记失败：${error.message}`, 'error');
+    }
 }
 
 async function handleOffline(id) {
-    if (!confirm('确定要下架该货品吗？')) return;
-    const updated = await request(`${API_BASE}/items/${id}/offline`, { method: 'POST' });
-    state.currentItem = updated;
-    updateItemInList(updated);
-    renderItemDetail();
-    renderItemList();
-    await loadStatistics();
-    showToast('货品已下架', 'success');
+    if (!confirm('确定要下架该货品吗？下架后其他用户将无法发起置换意向。')) return;
+    try {
+        const updated = await request(`${API_BASE}/items/${id}/offline`, { method: 'POST' });
+        state.currentItem = updated;
+        updateItemInList(updated);
+        renderItemDetail();
+        renderItemList();
+        await loadStatistics();
+        showToast('货品已下架', 'success');
+    } catch (error) {
+        showToast(`下架失败：${error.message}`, 'error');
+    }
 }
 
 async function handleRelist(id) {
-    const updated = await request(`${API_BASE}/items/${id}/relist`, { method: 'POST' });
-    state.currentItem = updated;
-    updateItemInList(updated);
-    renderItemDetail();
-    renderItemList();
-    await loadStatistics();
-    showToast('货品已重新上架', 'success');
+    try {
+        const updated = await request(`${API_BASE}/items/${id}/relist`, { method: 'POST' });
+        state.currentItem = updated;
+        updateItemInList(updated);
+        renderItemDetail();
+        renderItemList();
+        await loadStatistics();
+        showToast('货品已重新上架', 'success');
+    } catch (error) {
+        showToast(`重新上架失败：${error.message}`, 'error');
+    }
 }
 
 function updateItemInList(updatedItem) {
@@ -387,34 +402,38 @@ async function handleFormSubmit(e) {
         description: $('#formDescription').value.trim()
     };
 
-    if (state.editingId) {
-        const updated = await request(`${API_BASE}/items/${state.editingId}`, {
-            method: 'PUT',
-            body: JSON.stringify(data)
-        });
-        state.currentItem = updated;
-        updateItemInList(updated);
-        showToast('货品更新成功', 'success');
-    } else {
-        data.publisher = $('#formPublisher').value.trim();
-        const created = await request(`${API_BASE}/items`, {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-        state.currentItem = created;
-        showToast('货品发布成功', 'success');
-    }
-
-    closeModal();
-    await loadItems();
-    renderItemDetail();
-    await loadStatistics();
-
-    if (state.currentItem) {
-        const card = document.querySelector(`.item-card[data-id="${state.currentItem.id}"]`);
-        if (card) {
-            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    try {
+        if (state.editingId) {
+            const updated = await request(`${API_BASE}/items/${state.editingId}`, {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+            state.currentItem = updated;
+            updateItemInList(updated);
+            showToast('货品更新成功', 'success');
+        } else {
+            data.publisher = $('#formPublisher').value.trim();
+            const created = await request(`${API_BASE}/items`, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            state.currentItem = created;
+            showToast('货品发布成功', 'success');
         }
+
+        closeModal();
+        await loadItems();
+        renderItemDetail();
+        await loadStatistics();
+
+        if (state.currentItem) {
+            const card = document.querySelector(`.item-card[data-id="${state.currentItem.id}"]`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    } catch (error) {
+        showToast(`提交失败：${error.message}`, 'error');
     }
 }
 
